@@ -1,0 +1,96 @@
+#include <LiquidCrystal_I2C.h> // including the library fir i2c to use the lcds
+LiquidCrystal_I2C lcd2(0x27, 16, 2); // initialize lcds
+LiquidCrystal_I2C lcd1(0x26, 16, 2);
+// initialize leds pin number
+int green1 = 3; 
+int red1 = 2;
+int green2 = 5;
+int red2 = 4;
+int IR1 = 9;
+int IR2 = 10;
+int activeRoad = 1;  // or -1
+int timeOut = 3000; // time for led
+bool emergency = false;
+
+// the setup function runs once when you press reset or power the board
+void setup() {
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(green1, OUTPUT);
+  pinMode(red1, OUTPUT);
+  pinMode(green2, OUTPUT);
+  pinMode(red2, OUTPUT);
+  pinMode(IR1, INPUT);
+  pinMode(IR2, INPUT);
+ lcd1.begin();
+  lcd2.begin();
+
+  // Turn on the blacklight and print a message.
+ lcd1.backlight();
+ lcd2.backlight();
+  
+}
+
+// the loop function runs over and over again forever
+void loop() {
+  timeOut = timeOut - 1; 
+  if (timeOut == 0) {   
+      timeOut = 3000;
+      activeRoad *= -1;
+      emergency = false;
+      if(activeRoad == 1)
+      {
+        lcd1.clear();
+        lcd2.clear();
+        lcd1.print("GREEN!");
+        lcd2.print("RED!");
+      }else if (activeRoad == -1)
+      {
+          lcd1.clear();
+          lcd2.clear();
+          lcd1.print("RED!");
+          lcd2.print("GREEN!");
+      }
+    
+      
+  }
+  if (activeRoad == 1) {
+    digitalWrite(green1, HIGH);
+    digitalWrite(red2, HIGH);
+    digitalWrite(green2, LOW);
+    digitalWrite(red1, LOW);
+  
+
+  } else if (activeRoad == -1) {    
+    digitalWrite(green1, LOW);
+    digitalWrite(red2, LOW);
+    digitalWrite(green2, HIGH);
+    digitalWrite(red1, HIGH);
+ 
+  }
+  
+  if (!emergency) {
+    bool ir1 = (digitalRead(IR1) == HIGH);
+    bool ir2 = (digitalRead(IR2) == HIGH);
+    if (ir1 || ir2) {
+      emergency = true;
+      timeOut = 8000;
+    }
+    if (ir1 && (activeRoad == -1 || activeRoad == 1)) {
+      activeRoad = 1;
+    lcd1.clear();
+    lcd1.print("EMERGENCY!!");
+    lcd2.clear();
+    lcd2.print("Red!");
+    
+    
+    }
+    else if (ir2 && (activeRoad == 1 || activeRoad == -1)) {
+      activeRoad = -1;
+     lcd2.clear();
+     lcd2.print("EMERGENCY!!");
+     lcd1.clear();
+     lcd1.print("Red!");
+    }
+  }
+  delay(1);
+}
